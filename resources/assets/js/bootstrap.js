@@ -1,6 +1,4 @@
-
-window._ = require('lodash');
-
+window.Popper = require('popper.js').default;
 /**
  * We'll load jQuery and the Bootstrap jQuery plugin which provides support
  * for JavaScript based Bootstrap features such as modals and tabs. This
@@ -10,7 +8,7 @@ window._ = require('lodash');
 try {
     window.$ = window.jQuery = require('jquery');
 
-    require('bootstrap-sass');
+    require('bootstrap');
 } catch (e) {}
 
 /**
@@ -49,7 +47,7 @@ if (token) {
 
 // window.Echo = new Echo({
 //     broadcaster: 'pusher',
-//     key: 'your-pusher-key',
-//     cluster: 'mt1',
+//     key: process.env.MIX_PUSHER_APP_KEY,
+//     cluster: process.env.MIX_PUSHER_APP_CLUSTER,
 //     encrypted: true
 // });

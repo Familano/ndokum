@@ -2,111 +2,77 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Http\Requests;
 use App\Product;
-use App\Http\Resources\Product as ProductResource;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        $products = Product::paginate(10);
-
-        return ProductResource::collection($products);
+        return response()->json(Product::all(),200);
     }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+    
     public function store(Request $request)
     {
-        $product = new Product;
-        $product->product_name = $request->input('product_name');
-        $product->descriptions = $request->input('descriptions');
-        $product->image = $request->input('image');
-        $product->availability = $request->input('availability');
-        $product->cost_per_day = $request->input('cost_per_day');
+        $product = Product::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'units' => $request->units,
+            'price' => $request->price,
+            'image' => $request->image
+        ]);
+        
+        return response()->json([
+            'status' => (bool) $product,
+            'data'   => $product,
+            'message' => $product ? 'Product Created!' : 'Error Creating Product'
+        ]);
+    }
+    
+    public function show(Product $product)
+    {
+        return response()->json($product,200); 
+    }
 
-        if($product->save()){
-            return new ProductResource($product);
+    public function uploadFile(Request $request)
+    {
+        if($request->hasFile('image')){
+            $name = time()."_".$request->file('image')->getClientOriginalName();
+            $request->file('image')->move(public_path('images'), $name);
         }
+        return response()->json(asset("images/$name"),201);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+    public function update(Request $request, Product $product)
     {
-        $product = Product::findOrFail($id);
-
-        return new ProductResource($product);
+        $status = $product->update(
+            $request->only(['name', 'description', 'units', 'price', 'image'])
+        );
+        
+        return response()->json([
+            'status' => $status,
+            'message' => $status ? 'Product Updated!' : 'Error Updating Product'
+        ]);
+    }
+    
+    public function updateUnits(Request $request, Product $product)
+    {
+        $product->units = $product->units + $request->get('units');
+        $status = $product->save();
+        
+        return response()->json([
+            'status' => $status,
+            'message' => $status ? 'Units Added!' : 'Error Adding Product Units'
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
+    public function destroy(Product $product)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        $product = Product::find($id);
-        $product->product_name = $request->input('product_name');
-        $product->descriptions = $request->input('descriptions');
-        $product->image = $request->input('image');
-        $product->availability = $request->input('availability');
-        $product->cost_per_day = $request->input('cost_per_day');
-
-        if($product->save()){
-            return new ProductResource($product);
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        $product = Product::findOrFail($id);
-		if ($product->delete()) {
-			return new ProductResource($product);
-		}
+        $status = $product->delete();
+        
+        return response()->json([
+            'status' => $status,
+            'message' => $status ? 'Product Deleted!' : 'Error Deleting Product'
+        ]);
     }
 }
